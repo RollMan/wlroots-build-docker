@@ -2,11 +2,11 @@ ARG DEST=/wlroots-0.17.4-drm-prebuilt-amd64-linux
 
 FROM debian:bookworm AS build
 ARG DEST
-ENV PKG_CONFIG_PATH ${DEST}/share/pkgconfig:${DEST}/lib/x86_64-linux-gnu/pkgconfig
-ENV LD_LIBRARY_PATH ${DEST}/lib:${DEST}/lib/x86_64-linux-gnu
-ENV CPATH ${DEST}/include
-ENV C_INCLUDE_PATH ${DEST}/include
-ENV CPLUS_INCLUDE_PATH ${DEST}/include
+ENV PKG_CONFIG_PATH=${DEST}/share/pkgconfig:${DEST}/lib/x86_64-linux-gnu/pkgconfig
+ENV LD_LIBRARY_PATH=${DEST}/lib:${DEST}/lib/x86_64-linux-gnu
+ENV CPATH=${DEST}/include
+ENV C_INCLUDE_PATH=${DEST}/include
+ENV CPLUS_INCLUDE_PATH=${DEST}/include
 RUN apt update && apt install -y \
     libxcb-xinput-dev \
     glslang-tools \
@@ -67,40 +67,25 @@ WORKDIR /wlroots
 
 # TODO: use ARG for version digits.
 
-RUN curl -O https://gitlab.freedesktop.org/wayland/wayland/uploads/6dacf0ae5fc5dbd2fa6510d317853259/wayland-1.22.93.tar.xz && \
-    tar xf wayland-1.22.93.tar.xz && \
-    cd wayland-1.22.93 && \
-    meson setup build/ --prefix=${DEST} && \
-    ninja -C build/ install
-RUN curl -O https://gitlab.freedesktop.org/wayland/wayland-protocols/uploads/8e42ac41cda1522d5a39ca79f3b3899d/wayland-protocols-1.32.tar.xz && \
-    tar xf wayland-protocols-1.32.tar.xz && \
-    cd wayland-protocols-1.32 && \
-    meson setup build/ --prefix=${DEST} && \
-    ninja -C build/ install
+# Build wayland-server
+RUN --mount=type=bind,source=wayland/,target=. meson setup /build/wayland/ --prefix=${DEST} && \
+    ninja -C /build/wayland/ install
+
+# Build wayland-protocols
+RUN --mount=type=bind,source=wayland-protocols/,target=. meson setup /build/wayland-protocols/ --prefix=${DEST} && \
+    ninja -C /build/wayland-protocols/ install
 
 # Build libdisplay-info
-RUN curl -O https://gitlab.freedesktop.org/emersion/libdisplay-info/-/archive/0.2.0/libdisplay-info-0.2.0.tar.bz2 && \
-    tar xf libdisplay-info-0.2.0.tar.bz2 && \
-    cd libdisplay-info-0.2.0 && \
-    meson setup build/ --prefix=${DEST} && \
-    ninja -C build/ install
+RUN --mount=type=bind,source=libdisplay-info/,target=. meson setup /build/libdisplay-info/ --prefix=${DEST} && \
+    ninja -C /build/libdisplay-info/ install
 
 # Build libliftoff
-RUN curl -O https://gitlab.freedesktop.org/emersion/libliftoff/-/archive/v0.5.0/libliftoff-v0.5.0.tar.bz2 && \
-    tar xf libliftoff-v0.5.0.tar.bz2 && \
-    cd libliftoff-v0.5.0 && \
-    meson setup build/ --prefix=${DEST} && \
-    ninja -C build/ install
+RUN --mount=type=bind,source=libliftoff/,target=. meson setup /build/libliftoff/ --prefix=${DEST} && \
+    ninja -C /build/libliftoff/ install
 
-RUN cd / && \
-    tar Jcf ${DEST}.tar.xz ${DEST}
-
-
-RUN curl -O https://gitlab.freedesktop.org/wlroots/wlroots/-/archive/0.17.4/wlroots-0.17.4.tar.gz && \
-    tar xf wlroots-0.17.4.tar.gz && \
-    cd wlroots-0.17.4 && \
-    PKG_CONFIG_PATH=${DEST}/share/pkgconfig:${DEST}/lib/x86_64-linux-gnu/pkgconfig meson setup build/ --prefix=${DEST} && \
-    ninja -C build/ install
+# Build wlroots
+RUN --mount=type=bind,source=wlroots,target=. PKG_CONFIG_PATH=${DEST}/share/pkgconfig:${DEST}/lib/x86_64-linux-gnu/pkgconfig meson setup /build/wlroots/ --prefix=${DEST} && \
+    ninja -C /build/wlroots/ install
 
 RUN cd / && tar Jcf ${DEST}.tar.xz ${DEST}
 
