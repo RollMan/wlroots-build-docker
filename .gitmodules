@@ -1,0 +1,15 @@
+[submodule "wayland"]
+	path = wayland
+	url = https://gitlab.freedesktop.org/wayland/wayland.git
+[submodule "wayland-protocols"]
+	path = wayland-protocols
+	url = https://gitlab.freedesktop.org/wayland/wayland-protocols.git
+[submodule "libdisplay-info"]
+	path = libdisplay-info
+	url = https://gitlab.freedesktop.org/emersion/libdisplay-info.git
+[submodule "libliftoff"]
+	path = libliftoff
+	url = https://gitlab.freedesktop.org/emersion/libliftoff.git
+[submodule "wlroots"]
+	path = wlroots
+	url = https://gitlab.freedesktop.org/wlroots/wlroots.git
